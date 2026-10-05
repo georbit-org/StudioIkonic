@@ -13,6 +13,18 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+import socket
+# Prefer IPv4 resolution to prevent IPv6 connectivity timeouts on Windows / local dev
+_orig_getaddrinfo = socket.getaddrinfo
+def _prefer_ipv4_getaddrinfo(host, port, family=0, *args, **kwargs):
+    if family == 0 or family == socket.AF_UNSPEC:
+        try:
+            return _orig_getaddrinfo(host, port, socket.AF_INET, *args, **kwargs)
+        except Exception:
+            pass
+    return _orig_getaddrinfo(host, port, family, *args, **kwargs)
+socket.getaddrinfo = _prefer_ipv4_getaddrinfo
+
 import psycopg2
 import psycopg2.extras
 import math
@@ -228,6 +240,35 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def get_db_connection():
     """Returns a psycopg2 connection using RealDictCursor so rows behave like dicts."""
+    import urllib.parse
+    import socket
+    if DATABASE_URL.startswith(('postgres://', 'postgresql://')):
+        try:
+            p = urllib.parse.urlparse(DATABASE_URL)
+            ipv4 = None
+            if p.hostname and p.hostname != 'localhost':
+                try:
+                    ipv4 = socket.gethostbyname(p.hostname)
+                except Exception:
+                    ipv4 = None
+
+            kwargs = {
+                'dbname': p.path.lstrip('/') or 'postgres',
+                'user': urllib.parse.unquote(p.username or 'postgres'),
+                'password': urllib.parse.unquote(p.password or ''),
+                'host': p.hostname,
+                'port': p.port or 5432,
+                'cursor_factory': psycopg2.extras.RealDictCursor,
+                'connect_timeout': 10
+            }
+            if 'sslmode=require' in DATABASE_URL or (p.hostname and 'supabase' in p.hostname):
+                kwargs['sslmode'] = 'require'
+            if ipv4:
+                kwargs['hostaddr'] = ipv4
+            return psycopg2.connect(**kwargs)
+        except Exception as e:
+            print(f"Custom connection parsing failed ({e}), falling back to direct DSN connect.")
+
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
 
@@ -399,18 +440,30 @@ def init_db():
 init_db()
 
 
-@app.context_processor
-def inject_settings():
+_settings_cache = None
+_settings_cache_time = 0
+
+def get_cached_settings(force_refresh=False):
+    global _settings_cache, _settings_cache_time
+    import time
+    now = time.time()
+    if not force_refresh and _settings_cache is not None and (now - _settings_cache_time) < 120:
+        return _settings_cache
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT key, value FROM settings')
         all_settings = cursor.fetchall()
         conn.close()
-        settings_dict = {row['key']: row['value'] for row in all_settings}
+        _settings_cache = {row['key']: row['value'] for row in all_settings}
+        _settings_cache_time = now
+        return _settings_cache
     except Exception:
-        settings_dict = {}
-    return dict(site_settings=settings_dict)
+        return _settings_cache or {}
+
+@app.context_processor
+def inject_settings():
+    return dict(site_settings=get_cached_settings())
 
 
 # --- ROUTES ---

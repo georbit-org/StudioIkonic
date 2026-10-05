@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: studio-ikonic
+    runtime: python
+    region: singapore
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.3
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_MASTER_KEY
+        value: noVQocO-x_sm21zG9qP4JUH9ji10fRBR
+      - key: SUPABASE_URL
+        value: https://ntcpvzvgfimytgdcionx.supabase.co
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
