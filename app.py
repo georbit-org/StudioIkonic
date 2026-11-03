@@ -39,7 +39,7 @@ from PIL import Image
 
 
 # ---------------------------------------------------------------------------
-# Supabase Storage — persistent image uploads that survive every deploy
+# Supabase Storage â€” persistent image uploads that survive every deploy
 # ---------------------------------------------------------------------------
 # These are read at module level so the helper functions can use them.
 _SUPABASE_PROJECT_URL = None  # filled in after app config is loaded
@@ -226,7 +226,7 @@ DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Supabase Storage — wire up the module-level variables used by the upload helpers
+# Supabase Storage â€” wire up the module-level variables used by the upload helpers
 # SUPABASE_URL  : your project URL e.g. https://ntcpvzvgfimytgdcionx.supabase.co
 # SUPABASE_SERVICE_KEY : service_role key from Settings > API Keys (NOT the anon key)
 import sys as _sys
@@ -585,7 +585,7 @@ def admin_login():
     if request.method == 'POST':
         password = request.form.get('password')
 
-        # Recovery master key — set ADMIN_MASTER_KEY in your server env vars.
+        # Recovery master key â€” set ADMIN_MASTER_KEY in your server env vars.
         MASTER_KEY = os.environ.get('ADMIN_MASTER_KEY', '')
 
         conn = get_db_connection()
@@ -1169,6 +1169,113 @@ def admin_settings():
     conn.close()
     settings = {row['key']: row['value'] for row in all_settings}
     return render_template('admin_settings.html', settings=settings)
+
+
+
+
+# ---------------------------------------------------------------------------
+# JSON API ENDPOINTS — consumed by the Next.js frontend (additive, read-only)
+# ---------------------------------------------------------------------------
+
+@app.route('/api/home')
+def api_home():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM projects')
+        total_projects = cursor.fetchone()['count']
+        cursor.execute('SELECT * FROM projects WHERE is_featured = 1 ORDER BY date DESC')
+        projects = [dict(row) for row in cursor.fetchall()]
+        cursor.execute('SELECT * FROM testimonials WHERE is_active = 1 ORDER BY sort_order ASC')
+        testimonials = [dict(row) for row in cursor.fetchall()]
+        cursor.execute('SELECT key, value FROM settings')
+        settings_rows = cursor.fetchall()
+        conn.close()
+        site_settings = {row['key']: row['value'] for row in settings_rows}
+        stats = {
+            'stat1_value': site_settings.get('stat1_value', '100+'),
+            'stat1_label': site_settings.get('stat1_label', 'Projects Delivered'),
+            'stat2_value': site_settings.get('stat2_value', '25'),
+            'stat2_label': site_settings.get('stat2_label', 'Years of Mastery'),
+            'stat3_value': site_settings.get('stat3_value', '50+'),
+            'stat3_label': site_settings.get('stat3_label', 'Expert Designers'),
+            'stat4_value': site_settings.get('stat4_value', '99%'),
+            'stat4_label': site_settings.get('stat4_label', 'Client Satisfaction'),
+        }
+        return jsonify({'projects': projects, 'total_projects': total_projects,
+                        'testimonials': testimonials, 'stats': stats, 'site_settings': site_settings})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/projects')
+def api_all_projects():
+    try:
+        page = request.args.get('page', 1, type=int)
+        if page < 1: page = 1
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM projects')
+        total_projects = cursor.fetchone()['count']
+        total_pages = math.ceil(total_projects / PROJECTS_PER_PAGE) if total_projects > 0 else 1
+        if page > total_pages: page = total_pages
+        offset = (page - 1) * PROJECTS_PER_PAGE
+        cursor.execute('SELECT * FROM projects ORDER BY date DESC LIMIT %s OFFSET %s', (PROJECTS_PER_PAGE, offset))
+        projects = [dict(row) for row in cursor.fetchall()]
+        cursor.execute('SELECT key, value FROM settings')
+        site_settings = {row['key']: row['value'] for row in cursor.fetchall()}
+        conn.close()
+        return jsonify({'projects': projects, 'current_page': page, 'total_pages': total_pages,
+                        'total_projects': total_projects, 'site_settings': site_settings})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/project/<int:project_id>')
+def api_project_detail(project_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM projects WHERE id = %s', (project_id,))
+        project = cursor.fetchone()
+        if project is None:
+            conn.close()
+            return jsonify({'error': 'Project not found'}), 404
+        cursor.execute('SELECT * FROM project_images WHERE project_id = %s', (project_id,))
+        gallery_images = [dict(row) for row in cursor.fetchall()]
+        cursor.execute('SELECT * FROM projects WHERE location = %s AND id != %s LIMIT 3', (project['location'], project_id))
+        related_projects = [dict(row) for row in cursor.fetchall()]
+        cursor.execute('SELECT key, value FROM settings')
+        site_settings = {row['key']: row['value'] for row in cursor.fetchall()}
+        conn.close()
+        return jsonify({'project': dict(project), 'gallery_images': gallery_images,
+                        'related_projects': related_projects, 'site_settings': site_settings})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/settings')
+def api_settings():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT key, value FROM settings')
+        site_settings = {row['key']: row['value'] for row in cursor.fetchall()}
+        conn.close()
+        return jsonify(site_settings)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.after_request
+def add_cors_for_nextjs(response):
+    allowed = {'http://localhost:3000', 'http://127.0.0.1:3000'}
+    origin = request.headers.get('Origin', '')
+    if origin in allowed:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    return response
 
 
 @app.after_request
