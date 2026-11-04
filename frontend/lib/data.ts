@@ -313,3 +313,52 @@ export const PROCESS_STEPS = [
   },
 ];
 
+
+
+export interface Lead {
+  id: string | number;
+  name: string;
+  phone: string;
+  email: string;
+  service?: string;
+  budget?: string;
+  message: string;
+  created_at: string;
+  status: 'new' | 'contacted' | 'scheduled';
+}
+
+export const INITIAL_LEADS: Lead[] = [
+  {
+    id: 1,
+    name: 'Vikramaditya Oberoi',
+    phone: '+91 98201 44552',
+    email: 'v.oberoi@theluxurygroup.in',
+    service: 'Complete Renovations',
+    budget: '₹1.5Cr+',
+    message: 'Looking for a complete contemporary interior revamp for a 5,000 sq ft duplex apartment in Magnolias, Gurgaon.',
+    created_at: '2026-11-03 14:20',
+    status: 'new',
+  },
+  {
+    id: 2,
+    name: 'Dr. Ananya Sen',
+    phone: '+91 97110 88219',
+    email: 'ananya.sen@apollohealth.org',
+    service: 'Space Planning & Styling',
+    budget: '₹40L - ₹60L',
+    message: 'Interested in bespoke styling, lighting design and custom furniture for our new penthouse in Sector 56.',
+    created_at: '2026-11-02 18:45',
+    status: 'contacted',
+  },
+  {
+    id: 3,
+    name: 'Kabir Singhania',
+    phone: '+91 99992 11048',
+    email: 'kabir@singhaniaholdings.com',
+    service: 'Commercial Office Fitout',
+    budget: '₹2.5Cr+',
+    message: 'Need high-end executive boardroom and collaborative design scheme for tech firm in One Horizon Center.',
+    created_at: '2026-10-31 11:15',
+    status: 'scheduled',
+  },
+];

@@ -2,41 +2,70 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, CheckCircle, Send, Calendar, Radius } from 'lucide-react';
+import { X, Send, Calendar, Loader2 } from 'lucide-react';
+import { useDemo } from '@/components/ui/DemoModal';
 
 export default function CtaSection() {
+  const { showSuccess } = useDemo();
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading]     = useState(false);
-  const [success, setSuccess]     = useState(false);
-  const [error, setError]         = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+
+    const fd = new FormData(e.currentTarget);
+    const clientName = (fd.get('name') as string) || 'Prospective Client';
+    const phone = (fd.get('phone') as string) || '';
+    const email = (fd.get('email') as string) || '';
+    const service = (fd.get('service') as string) || 'Residential Villa / Apartment';
+    const message = (fd.get('message') as string) || '';
+
+    const newLead = {
+      id: Date.now(),
+      name: clientName,
+      phone,
+      email,
+      service,
+      budget: '₹60L - ₹1.2Cr (Est.)',
+      message,
+      created_at: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      status: 'new' as const,
+    };
+
+    // Store in sessionStorage so it shows up in /admin/leads
     try {
-      const fd = new FormData(e.currentTarget);
-      const body = new URLSearchParams(fd as unknown as Record<string, string>).toString();
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body,
-      });
-      if (res.ok || res.redirected) { setSuccess(true); }
-      else { setError('Something went wrong. Please call us directly.'); }
+      const stored = sessionStorage.getItem('demo_leads');
+      const leads = stored ? JSON.parse(stored) : [];
+      sessionStorage.setItem('demo_leads', JSON.stringify([newLead, ...leads]));
     } catch {
-      setSuccess(true);
-    } finally {
-      setLoading(false);
+      // ignore
     }
+
+    // Simulate realistic processing time
+    setTimeout(() => {
+      setLoading(false);
+      setModalOpen(false);
+
+      showSuccess(
+        'Consultation Request Received',
+        `Thank you, ${clientName}! Your consultation enquiry has been recorded in your demo leads portal. In production, this immediately sends SMS alerts and emails principal designer Shakir Ali.`,
+        {
+          label: 'View in Admin Leads',
+          href: '/admin/leads',
+        }
+      );
+    }, 1100);
   };
 
-  const closeModal = () => { setModalOpen(false); setTimeout(() => { setSuccess(false); setError(''); }, 400); };
+  const closeModal = () => {
+    setModalOpen(false);
+  };
 
   return (
     <>
       {/* ── CTA Section — Framed Container with Margins ────────────── */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1240px] my-10 sm:my-14 mb-16 sm:mb-24">
+      <section id="contact" className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1240px] my-10 sm:my-14 mb-16 sm:mb-24">
         <div className="flex flex-col md:flex-row min-h-[420px] lg:min-h-[460px] rounded-[24px] sm:rounded-[32px] overflow-hidden border border-white/80 shadow-[0_12px_40px_rgba(15,30,60,0.07)] bg-[#f5f0e8]">
           
           {/* Left — interior image */}
@@ -111,7 +140,7 @@ export default function CtaSection() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '1rem',
           }}
-          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+          onClick={(e) => { if (e.target === e.currentTarget && !loading) closeModal(); }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -130,12 +159,13 @@ export default function CtaSection() {
             }}>
               <button
                 onClick={closeModal}
+                disabled={loading}
                 style={{
                   position: 'absolute', top: '1rem', right: '1rem',
                   background: 'rgba(255,255,255,0.1)', border: 'none',
                   borderRadius: '50%', width: '32px', height: '32px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'white', cursor: 'pointer',
+                  color: 'white', cursor: loading ? 'not-allowed' : 'pointer',
                 }}
               >
                 <X size={16} />
@@ -156,64 +186,63 @@ export default function CtaSection() {
 
             {/* Modal body */}
             <div style={{ padding: '2rem' }}>
-              {success ? (
-                <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-                  <CheckCircle size={48} color="var(--gold)" style={{ margin: '0 auto 1rem' }} />
-                  <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: 'var(--navy)', marginBottom: '0.5rem' }}>
-                    Consultation Request Received
-                  </h4>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-                    Thank you! Shakir Ali will personally review your project details and contact you within 24 hours.
-                  </p>
-                  <button onClick={closeModal} className="btn btn-navy" style={{ margin: '0 auto' }}>
-                    Close
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div>
-                      <label style={labelStyle}>Your Name *</label>
-                      <input style={inputStyle} name="name" required placeholder="Mr. / Ms. Name" />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Phone Number *</label>
-                      <input style={inputStyle} name="phone" type="tel" required placeholder="+91 98765 43210" />
-                    </div>
-                  </div>
-
-                  <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div>
-                      <label style={labelStyle}>Email Address</label>
-                      <input style={inputStyle} name="email" type="email" placeholder="you@example.com" />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Project Type</label>
-                      <select style={{ ...inputStyle, cursor: 'pointer' }} name="service">
-                        <option value="Residential">Residential Villa / Apartment</option>
-                        <option value="Commercial">Commercial Office / HQ</option>
-                        <option value="Renovation">Complete Renovation</option>
-                        <option value="Hospitality">Hospitality / Restaurant</option>
-                        <option value="Other">Other Bespoke Requirement</option>
-                      </select>
-                    </div>
-                  </div>
-
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={labelStyle}>Project Details &amp; Location</label>
-                    <textarea
-                      name="message" required rows={4}
-                      placeholder="Tell us about your project, space size, budget range, timeline..."
-                      style={{ ...inputStyle, resize: 'vertical', minHeight: '100px' }}
-                    />
+                    <label style={labelStyle}>Your Name *</label>
+                    <input style={inputStyle} name="name" required placeholder="Mr. / Ms. Name" />
                   </div>
-                  {error && <p style={{ color: '#e53e3e', fontSize: '0.85rem', margin: 0 }}>{error}</p>}
-                  <button type="submit" className="btn btn-gold" disabled={loading}
-                    style={{ justifyContent: 'center', opacity: loading ? 0.7 : 1 }}>
-                    {loading ? 'Sending…' : <><Send size={15} /> Submit Inquiry</>}
-                  </button>
-                </form>
-              )}
+                  <div>
+                    <label style={labelStyle}>Phone Number *</label>
+                    <input style={inputStyle} name="phone" type="tel" required placeholder="+91 98765 43210" />
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={labelStyle}>Email Address</label>
+                    <input style={inputStyle} name="email" type="email" placeholder="you@example.com" />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Project Type</label>
+                    <select style={{ ...inputStyle, cursor: 'pointer' }} name="service">
+                      <option value="Residential">Residential Villa / Apartment</option>
+                      <option value="Commercial">Commercial Office / HQ</option>
+                      <option value="Renovation">Complete Renovation</option>
+                      <option value="Hospitality">Hospitality / Restaurant</option>
+                      <option value="Other">Other Bespoke Requirement</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Project Details &amp; Location</label>
+                  <textarea
+                    name="message" required rows={4}
+                    placeholder="Tell us about your project, space size, budget range, timeline..."
+                    style={{ ...inputStyle, resize: 'vertical', minHeight: '100px' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-gold"
+                  disabled={loading}
+                  style={{ justifyContent: 'center', opacity: loading ? 0.75 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Transmitting Inquiry...</span>
+                    </span>
+                  ) : (
+                    <>
+                      <Send size={15} />
+                      <span>Submit Inquiry</span>
+                    </>
+                  )}
+                </button>
+              </form>
             </div>
           </motion.div>
         </div>

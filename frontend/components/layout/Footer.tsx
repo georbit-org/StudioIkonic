@@ -37,6 +37,7 @@ const NAV_LINKS = [
   { label: 'About Us',     href: '/#about' },
   { label: 'Services',     href: '/#services' },
   { label: 'Contact Us',   href: '/#contact' },
+  { label: 'Admin Portal (Demo)', href: '/admin/login' },
 ];
 
 const CONTACT = [

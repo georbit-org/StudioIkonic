@@ -1,91 +1,24 @@
-# ============================================================
-# Iconic Design — .gitignore
-# ============================================================
+# Node & Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
 
-# --- Database files (use separate DB in production) ---
-*.db
-*.sqlite
-*.sqlite3
+# Environment files
+.env*
+!.env.example
 
-# --- Uploaded media ---
-# Essential static assets ARE committed (hero, logos, placeholder SVGs)
-# Only ignore future user-uploaded files added via admin panel
-static/uploads/*.webp
-!static/uploads/hero_bg.png
-!static/uploads/hero_bg_landscape.png
-!static/uploads/hero_bg.jpg
-!static/uploads/shakir_ali.png
-!static/uploads/logo.png
-!static/uploads/logo-icon.png
-!static/uploads/logo-icon-transparent.png
-!static/uploads/logo_icon.png
-!static/uploads/client-photo.png
-!static/uploads/image.png
-!static/uploads/*.svg
-!static/uploads/.gitkeep
+# Logs & Debugging
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# --- Environment & secrets ---
-.env
-
-# --- Python ---
-__pycache__/
-*.py[cod]
-*$py.class
-*.pyo
-*.pyd
-
-# --- Virtual environment ---
-venv/
-env/
-.venv/
-.env/
-
-# --- Testing & dev artifacts (not for production) ---
-*.test.py
-test_*.py
-*_test.py
-advanced_test.py
-comprehensive_test.py
-edge_case_test.py
-scratch_process.py
-check_db.py
-test_report.txt
-
-# --- Temporary / scratch files ---
-index_diff.txt
-*.diff
-*.patch
-
-# --- Internal planning docs (kept local only) ---
-TESTING_REPORT.md
-TESTING_SUMMARY.md
-INDIAN_VPS_LAUNCH_PLAN.md
-client_requirements.md
-implementation_plan.md
-
-# --- Bot (unrelated trading bot code) ---
-bot/
-main.py
-
-# --- IDE & OS files ---
-.idea/
-.vscode/
-*.swp
-*.swo
+# OS Files
 .DS_Store
 Thumbs.db
 
-# --- Pytest ---
-.pytest_cache/
-htmlcov/
-.coverage
-
-# --- Build artifacts ---
-dist/
-build/
-*.egg-info/
-
-# Large binary files
-*.zip
-cloudflared.exe
-*.exe
+# Turbopack / Next cache
+*.tsbuildinfo
+next-env.d.ts

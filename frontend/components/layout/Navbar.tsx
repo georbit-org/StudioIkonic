@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, ArrowLeft, Phone } from 'lucide-react';
+import { Menu, X, ArrowLeft, Phone, Lock } from 'lucide-react';
 
 const NAV_LINKS = [
   { label: 'INTERIORS',   href: '/#projects' },
@@ -125,14 +125,14 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* RIGHT-CENTER: Enlarged Nav buttons + Call icon */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1.5rem, 3.5vw, 3.25rem)' }}>
+          {/* RIGHT-CENTER: Enlarged Nav buttons + Admin Button + Call icon */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2.5vw, 2.25rem)' }}>
             <nav className="nav-desktop">
               <ul
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 'clamp(1.5rem, 3vw, 2.75rem)',
+                  gap: 'clamp(1.25rem, 2.5vw, 2.25rem)',
                   listStyle: 'none',
                   margin: 0,
                   padding: 0,
@@ -164,6 +164,32 @@ export default function Navbar() {
                 ))}
               </ul>
             </nav>
+
+            {/* Admin preview link button */}
+            <Link
+              href="/admin/login"
+              className="nav-admin-btn"
+              title="Admin Portal (Demo)"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.45rem 0.95rem',
+                borderRadius: '9999px',
+                border: isTransparent ? '1px solid rgba(255,255,255,0.45)' : '1px solid rgba(201,168,76,0.6)',
+                background: isTransparent ? 'rgba(255,255,255,0.12)' : 'rgba(201,168,76,0.1)',
+                color: isTransparent ? '#FFFFFF' : '#8A6A24',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'all 0.25s ease',
+              }}
+            >
+              <Lock size={13} />
+              <span>Admin</span>
+            </Link>
 
             {/* Call icon on far right */}
             <a
@@ -248,7 +274,33 @@ export default function Navbar() {
           </a>
         ))}
 
-        <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+        {/* Mobile Admin button */}
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <Link
+            href="/admin/login"
+            onClick={() => setMobileOpen(false)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.65rem 1.4rem',
+              borderRadius: '9999px',
+              border: '1px solid rgba(201,168,76,0.6)',
+              background: 'rgba(201,168,76,0.15)',
+              color: 'var(--gold-light, #E5C365)',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}
+          >
+            <Lock size={15} />
+            <span>Admin Portal (Demo)</span>
+          </Link>
+        </div>
+
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
           <a
             href="tel:+919811685628"
             style={{
@@ -270,6 +322,12 @@ export default function Navbar() {
       <style>{`
         .nav-btn-enlarged:hover {
           color: var(--gold) !important;
+        }
+        .nav-admin-btn:hover {
+          background: var(--gold) !important;
+          color: #0F1E3C !important;
+          border-color: var(--gold) !important;
+          transform: translateY(-1px);
         }
         .nav-call-btn:hover {
           background: var(--gold) !important;

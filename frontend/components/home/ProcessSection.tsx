@@ -76,6 +76,7 @@ export default function ProcessSection() {
             muted
             loop
             playsInline
+            preload="metadata"
             className="w-full h-auto block"
             style={{
               maxHeight: 'none',
@@ -104,16 +105,14 @@ export default function ProcessSection() {
               {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
           </div>
-
-          {/* Top-Left Studio Reel Pill */}
-          {/* <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 pointer-events-none">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B1526]/80 backdrop-blur-md border border-[rgba(201,168,76,0.25)] text-white text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase">
-              <span className="w-2 h-2 rounded-full bg-[#c9a84c] animate-pulse" />
-              Studio Showreel
-            </span>
-          </div> */}
         </motion.div>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          #process { padding-top: 3.5rem !important; padding-bottom: 3.5rem !important; }
+        }
+      `}</style>
     </section>
   );
 }
