@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   MessageSquareQuote,
   Plus,
@@ -8,136 +9,326 @@ import {
   Pencil,
   Trash2,
   Eye,
-  ArrowUpDown,
+  EyeOff,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
-import { TESTIMONIALS } from '@/lib/data';
-import { useDemo } from '@/components/ui/DemoModal';
+import { useMockDb, Testimonial } from '@/lib/mock/store';
+import { useFeedback } from '@/lib/mock/feedback';
 
 export default function AdminTestimonialsPage() {
-  const { showPreview } = useDemo();
+  const { state, toggleTestimonial, deleteTestimonial, reorderTestimonial, upsertTestimonial } = useMockDb();
+  const { toast, confirm } = useFeedback();
+
+  // Add testimonial form state
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('Villa Owner, Gurgaon');
+  const [stars, setStars] = useState(5);
+  const [text, setText] = useState('');
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !text.trim()) {
+      toast('Client name and review text are required', 'error');
+      return;
+    }
+
+    upsertTestimonial({
+      name,
+      role,
+      stars,
+      text,
+      published: true,
+    });
+
+    toast(`Review from "${name}" added successfully (demo)`, 'success');
+    setName('');
+    setText('');
+  };
+
+  const handleDelete = (item: Testimonial) => {
+    confirm({
+      title: `Delete Review by "${item.name}"?`,
+      message: 'This testimonial will be removed from your website marquee and trust section.',
+      confirmText: 'Delete Review',
+      onConfirm: () => {
+        deleteTestimonial(item.id);
+        toast(`Review by "${item.name}" deleted (demo)`, 'info');
+      },
+    });
+  };
+
+  const handleToggle = (item: Testimonial) => {
+    toggleTestimonial(item.id);
+    const newStatus = item.published !== false ? 'hidden' : 'published';
+    toast(`Review by "${item.name}" is now ${newStatus} (demo)`, 'success');
+  };
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1
-            className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1F1713]"
-            style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)' }}
-          >
-            Client Reviews & Testimonials
-          </h1>
-          <p className="mt-1 text-xs sm:text-sm text-[#786757]">
-            Curate luxury homeowner feedback displayed in the marquee and homepage trust section.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            onClick={() =>
-              showPreview(
-                'Reorder Testimonials',
-                'Enables drag-and-drop handles to prioritize specific high-profile celebrity or villa testimonials.'
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-xl border border-[#D5C9B8] bg-white px-3.5 py-2.5 text-xs font-bold text-[#5C4B3C] shadow-xs hover:bg-[#FAF7F2] transition"
-          >
-            <ArrowUpDown size={14} />
-            <span>Reorder</span>
-          </button>
-
-          <button
-            onClick={() =>
-              showPreview(
-                'Add Testimonial',
-                'Adds a new client review with star rating, client name, luxury location or designation, and custom quote.'
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1F1713] px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-[#342721] transition"
-          >
-            <Plus size={16} />
-            <span>Add Testimonial</span>
-          </button>
-        </div>
+      <div>
+        <h1
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: '1.85rem',
+            fontWeight: 700,
+            color: '#0f1e3c',
+            margin: 0,
+          }}
+        >
+          Testimonials &amp; Client Feedback
+        </h1>
+        <p style={{ margin: '0.25rem 0 0', fontSize: '0.84rem', color: '#64748b' }}>
+          Curate homeowner testimonials, reorder priority quotes, and manage public marquee visibility.
+        </p>
       </div>
 
-      {/* Testimonials List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {TESTIMONIALS.map((item) => (
-          <div
-            key={item.id}
-            className="rounded-2xl border border-[#DED4C5] bg-[#FAF7F2] p-5 shadow-xs flex flex-col justify-between"
-          >
+      {/* Card 1: Add New Testimonial */}
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+          borderTop: '4px solid #d4af37',
+          borderLeft: '1px solid rgba(0,0,0,0.06)',
+          borderRight: '1px solid rgba(0,0,0,0.06)',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ padding: '1.25rem 1.75rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <Plus size={18} color="#d4af37" />
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: '#0f1e3c', margin: 0 }}>
+            Add New Testimonial
+          </h2>
+        </div>
+
+        <form onSubmit={handleCreate} style={{ padding: '1.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
             <div>
-              <div className="flex items-center justify-between">
-                {/* 5 Stars */}
-                <div className="flex items-center gap-1 text-[#C9A84C]">
-                  {Array.from({ length: item.stars }).map((_, i) => (
-                    <Star key={i} size={14} className="fill-[#C9A84C]" />
-                  ))}
-                </div>
-
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                  Published
-                </span>
-              </div>
-
-              <blockquote className="mt-3 text-xs leading-relaxed text-[#4A3C2F] italic">
-                "{item.text}"
-              </blockquote>
+              <label style={labelStyle}>Client Name *</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Rajiv Mehta"
+                required
+                style={inputStyle}
+              />
             </div>
 
-            <div className="mt-5 pt-4 border-t border-[#EAE1D3] flex items-center justify-between">
-              <div>
-                <div className="font-bold text-xs text-[#1F1713]">{item.name}</div>
-                <div className="text-[11px] text-[#8C7B6B]">{item.role}</div>
-              </div>
+            <div>
+              <label style={labelStyle}>Client Title / Location</label>
+              <input
+                type="text"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                placeholder="Villa Owner, DLF Phase 4"
+                style={inputStyle}
+              />
+            </div>
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() =>
-                    showPreview(
-                      `Toggle Visibility: ${item.name}`,
-                      'Temporarily hides or reveals this review on the public homepage marquee.'
-                    )
-                  }
-                  className="p-1.5 rounded-lg border border-[#D5C9B8] bg-white text-[#635343] hover:text-[#1F1713] transition"
-                  title="Toggle visibility"
-                >
-                  <Eye size={13} />
-                </button>
-
-                <button
-                  onClick={() =>
-                    showPreview(
-                      `Edit Review: ${item.name}`,
-                      'Opens review editor to amend text, client role, or avatar initials.'
-                    )
-                  }
-                  className="p-1.5 rounded-lg border border-[#D5C9B8] bg-white text-[#635343] hover:text-[#1F1713] transition"
-                  title="Edit testimonial"
-                >
-                  <Pencil size={13} />
-                </button>
-
-                <button
-                  onClick={() =>
-                    showPreview(
-                      `Delete Review: ${item.name}`,
-                      'Removes this testimonial from the database.'
-                    )
-                  }
-                  className="p-1.5 rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 transition"
-                  title="Delete testimonial"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
+            <div>
+              <label style={labelStyle}>Rating (Stars)</label>
+              <select
+                value={stars}
+                onChange={(e) => setStars(Number(e.target.value))}
+                style={{ ...inputStyle, cursor: 'pointer' }}
+              >
+                <option value={5}>5 Stars - Exceptional</option>
+                <option value={4}>4 Stars - Great</option>
+                <option value={3}>3 Stars - Good</option>
+              </select>
             </div>
           </div>
-        ))}
+
+          <div style={{ marginTop: '1.25rem' }}>
+            <label style={labelStyle}>Client Review Quote *</label>
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Shakir Ali and his team transformed our space with extraordinary attention to detail..."
+              rows={3}
+              required
+              style={{ ...inputStyle, resize: 'vertical' }}
+            />
+          </div>
+
+          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="submit"
+              style={{
+                padding: '0.8rem 2rem',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #0f1e3c 0%, #1e40af 100%)',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 12px rgba(15, 30, 60, 0.2)',
+              }}
+            >
+              <Plus size={16} /> Add Testimonial
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Card 2: Existing Testimonials list */}
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+          border: '1px solid rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ padding: '1.25rem 1.75rem', borderBottom: '1px solid #f1f5f9' }}>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: '#0f1e3c', margin: 0 }}>
+            Published Client Reviews ({state.testimonials.length})
+          </h2>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {state.testimonials.map((item, idx) => (
+            <div
+              key={item.id}
+              style={{
+                padding: '1.5rem 1.75rem',
+                borderBottom: '1px solid #f1f5f9',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: '1.5rem',
+                backgroundColor: item.published !== false ? '#ffffff' : '#f8fafc',
+              }}
+            >
+              {/* Left review details */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', color: '#d4af37' }}>
+                    {Array.from({ length: item.stars }).map((_, i) => (
+                      <Star key={i} size={15} className="fill-current" />
+                    ))}
+                  </div>
+
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '4px',
+                      backgroundColor: item.published !== false ? 'rgba(22, 163, 74, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+                      color: item.published !== false ? '#16a34a' : '#64748b',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {item.published !== false ? 'Visible' : 'Hidden'}
+                  </span>
+                </div>
+
+                <p style={{ margin: '0.4rem 0', fontSize: '0.88rem', color: '#334155', fontStyle: 'italic', lineHeight: 1.6 }}>
+                  &ldquo;{item.text}&rdquo;
+                </p>
+
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f1e3c', marginTop: '0.4rem' }}>
+                  {item.name} <span style={{ fontWeight: 400, color: '#64748b' }}>— {item.role}</span>
+                </div>
+              </div>
+
+              {/* Right action controls */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+                {/* Reorder Buttons */}
+                <button
+                  type="button"
+                  onClick={() => reorderTestimonial(item.id, 'up')}
+                  disabled={idx === 0}
+                  title="Move review up"
+                  style={{ ...btnStyle, opacity: idx === 0 ? 0.35 : 1 }}
+                >
+                  <ChevronUp size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => reorderTestimonial(item.id, 'down')}
+                  disabled={idx === state.testimonials.length - 1}
+                  title="Move review down"
+                  style={{ ...btnStyle, opacity: idx === state.testimonials.length - 1 ? 0.35 : 1 }}
+                >
+                  <ChevronDown size={14} />
+                </button>
+
+                {/* Toggle Visibility */}
+                <button
+                  type="button"
+                  onClick={() => handleToggle(item)}
+                  title={item.published !== false ? 'Hide from public marquee' : 'Show in public marquee'}
+                  style={btnStyle}
+                >
+                  {item.published !== false ? <Eye size={14} color="#16a34a" /> : <EyeOff size={14} color="#94a3b8" />}
+                </button>
+
+                {/* Edit Link */}
+                <Link
+                  href={`/admin/testimonials/${item.id}/edit`}
+                  title="Edit testimonial"
+                  style={{ ...btnStyle, color: '#1e40af' }}
+                >
+                  <Pencil size={14} />
+                </Link>
+
+                {/* Delete */}
+                <button
+                  type="button"
+                  onClick={() => handleDelete(item)}
+                  title="Delete review"
+                  style={{ ...btnStyle, color: '#dc2626' }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '0.8rem',
+  fontWeight: 700,
+  color: '#334155',
+  marginBottom: '0.35rem',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.65rem 0.85rem',
+  borderRadius: '6px',
+  border: '1.5px solid #cbd5e1',
+  fontSize: '0.88rem',
+  fontFamily: "'Poppins', sans-serif",
+  outline: 'none',
+  backgroundColor: '#ffffff',
+};
+
+const btnStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0.4rem 0.65rem',
+  borderRadius: '6px',
+  border: '1.5px solid #cbd5e1',
+  backgroundColor: '#ffffff',
+  color: '#475569',
+  cursor: 'pointer',
+  textDecoration: 'none',
+};

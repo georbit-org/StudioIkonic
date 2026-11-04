@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   FolderKanban,
@@ -10,164 +10,277 @@ import {
   Inbox,
   Settings,
   ExternalLink,
+  LogOut,
+  RotateCcw,
   Sparkles,
   Menu,
   X,
-  LogOut,
-  ShieldAlert,
 } from 'lucide-react';
-import { useDemo } from '@/components/ui/DemoModal';
+import { useMockDb } from '@/lib/mock/store';
+import { useFeedback } from '@/lib/mock/feedback';
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Projects', href: '/admin/projects', icon: FolderKanban },
+const ADMIN_LINKS = [
+  { label: 'Dashboard & Projects', href: '/admin', icon: LayoutDashboard },
+  { label: 'Client Inquiries', href: '/admin/leads', icon: Inbox },
   { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquareQuote },
-  { label: 'Leads & Inquiries', href: '/admin/leads', icon: Inbox },
   { label: 'Site Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { showPreview } = useDemo();
+  const router = useRouter();
+  const { resetDb } = useMockDb();
+  const { toast, confirm } = useFeedback();
+  const [authorized, setAuthorized] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // If this is the login page, don't wrap it in the admin shell
+  // If this is the login page, don't wrap with admin navbar/shell
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 
+  useEffect(() => {
+    const session = sessionStorage.getItem('demo_admin_session');
+    if (!session) {
+      router.replace('/admin/login');
+    } else {
+      setAuthorized(true);
+    }
+  }, [pathname, router]);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('demo_admin_session');
+    toast('Logged out of Admin Portal', 'info');
+    router.push('/admin/login');
+  };
+
+  const handleResetData = () => {
+    confirm({
+      title: 'Reset Demo Data to Initial Seed?',
+      message: 'This will restore all projects, reviews, inquiries, and settings back to default factory state.',
+      confirmText: 'Reset State',
+      onConfirm: () => {
+        resetDb();
+        toast('Demo database reset to factory state', 'success');
+      },
+    });
+  };
+
+  if (!authorized) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fafafa' }}>
+        <div style={{ textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+          Checking administrator authorization...
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#F4EFE6] text-[#1F1713] flex flex-col md:flex-row">
-      {/* ── Desktop Sidebar ── */}
-      <aside className="hidden md:flex md:w-64 flex-col justify-between border-r border-[#DED4C5] bg-[#FAF7F2] p-6 shadow-sm shrink-0">
-        <div>
-          {/* Logo / Title */}
-          <div className="mb-8 flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo_transparent.png" alt="Iconic Design" className="h-9 w-auto" />
-            <div>
-              <div className="text-sm font-bold tracking-tight text-[#1F1713]">Iconic Admin</div>
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-[#C9A84C]">Studio Control</div>
+    <div style={{ minHeight: '100vh', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', fontFamily: "'Poppins', sans-serif" }}>
+      {/* ── Top Header matching original Flask base.html ── */}
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          backgroundColor: 'rgba(235, 222, 202, 0.96)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '3px solid #d4af37',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '1240px',
+            margin: '0 auto',
+            padding: '0.85rem 1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          {/* Brand Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <Link href="/admin" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo_transparent.png"
+                alt="Iconic Design"
+                style={{ height: '38px', width: 'auto' }}
+              />
+            </Link>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                backgroundColor: 'rgba(212, 175, 55, 0.18)',
+                border: '1px solid #d4af37',
+                padding: '0.2rem 0.6rem',
+                borderRadius: '9999px',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                color: '#856404',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
+              <Sparkles size={11} />
+              <span>Admin Preview</span>
             </div>
           </div>
 
-          {/* Nav links */}
-          <nav className="space-y-1.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            {ADMIN_LINKS.map((link) => {
+              const isActive = pathname === link.href;
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold tracking-wide transition ${
-                    isActive
-                      ? 'bg-[#1F1713] text-white shadow-sm'
-                      : 'text-[#635343] hover:bg-[#EFE8DD] hover:text-[#1F1713]'
-                  }`}
+                  key={link.href}
+                  href={link.href}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    fontSize: '0.86rem',
+                    fontWeight: isActive ? 700 : 500,
+                    color: isActive ? '#0f1e3c' : '#475569',
+                    textDecoration: 'none',
+                    padding: '0.4rem 0.6rem',
+                    borderBottom: isActive ? '2px solid #0f1e3c' : '2px solid transparent',
+                    transition: 'all 0.2s',
+                  }}
                 >
-                  <Icon size={17} className={isActive ? 'text-[#C9A84C]' : 'text-[#8C7B6B]'} />
-                  <span>{item.label}</span>
+                  <link.icon size={15} color={isActive ? '#d4af37' : '#94a3b8'} />
+                  <span>{link.label}</span>
                 </Link>
               );
             })}
           </nav>
-        </div>
 
-        {/* Sidebar Footer */}
-        <div className="space-y-3 pt-6 border-t border-[#E7DDCE]">
-          <button
-            onClick={() => showPreview('Database Backup / Export')}
-            className="w-full flex items-center justify-between rounded-xl bg-[#EFE9DF] px-3.5 py-2 text-xs font-semibold text-[#665444] hover:bg-[#E4DCCE] transition"
-          >
-            <span className="flex items-center gap-2">
-              <ShieldAlert size={14} className="text-[#C9A84C]" />
-              <span>Database Sync</span>
-            </span>
-            <span className="text-[10px] bg-white/70 px-1.5 py-0.5 rounded text-[#8A7968]">SANDBOX</span>
-          </button>
-
-          <Link
-            href="/"
-            className="flex items-center justify-center gap-2 rounded-xl border border-[#D5C9B8] px-3.5 py-2 text-xs font-semibold text-[#5A4B3D] hover:bg-white hover:text-[#1F1713] transition"
-          >
-            <ExternalLink size={14} />
-            <span>View Live Site</span>
-          </Link>
-        </div>
-      </aside>
-
-      {/* ── Main Content Area ── */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#DED4C5] bg-[#FAF7F2]/95 backdrop-blur-md px-4 sm:px-8">
-          <div className="flex items-center gap-3">
+          {/* Right utility buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-[#635343] hover:bg-[#EFE8DD]"
-              aria-label="Toggle Navigation"
+              onClick={handleResetData}
+              title="Reset state to initial seed data"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.45rem 0.8rem',
+                borderRadius: '6px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                color: '#475569',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
             >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              <RotateCcw size={13} />
+              <span className="hidden sm:inline">Reset Demo</span>
             </button>
 
-            {/* Preview Banner Pill */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#C9A84C]/50 bg-[#C9A84C]/15 px-3.5 py-1 text-xs font-bold text-[#7E5E1C] shadow-sm">
-              <Sparkles size={14} className="text-[#A67C2E] animate-pulse" />
-              <span>PREVIEW MODE • Interactive Client Demo</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-[#6E5D4E] hover:text-[#1F1713] transition px-3 py-1.5 rounded-lg border border-[#DED4C5] bg-white shadow-xs"
+              target="_blank"
+              title="Open public website in new tab"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.45rem 0.8rem',
+                borderRadius: '6px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                color: '#0f1e3c',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              <ExternalLink size={13} />
+              <span className="hidden sm:inline">Live Site</span>
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.45rem 0.8rem',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                border: '1px solid rgba(220, 53, 69, 0.25)',
+                color: '#dc2626',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
             >
               <LogOut size={13} />
-              <span>Exit Preview</span>
-            </Link>
-          </div>
-        </header>
+              <span>Logout</span>
+            </button>
 
-        {/* Mobile Dropdown Navigation */}
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#0f1e3c',
+                padding: '4px',
+              }}
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-b border-[#DED4C5] bg-[#FAF7F2] p-4 space-y-1.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold tracking-wide transition ${
-                    isActive
-                      ? 'bg-[#1F1713] text-white shadow-sm'
-                      : 'text-[#635343] hover:bg-[#EFE8DD] hover:text-[#1F1713]'
-                  }`}
-                >
-                  <Icon size={17} className={isActive ? 'text-[#C9A84C]' : 'text-[#8C7B6B]'} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-            <div className="pt-2 border-t border-[#E7DDCE]">
+          <div
+            style={{
+              padding: '1rem',
+              backgroundColor: 'rgba(235, 222, 202, 0.98)',
+              borderTop: '1px solid rgba(0,0,0,0.06)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.6rem',
+            }}
+          >
+            {ADMIN_LINKS.map((link) => (
               <Link
-                href="/"
-                className="flex items-center justify-center gap-2 rounded-xl border border-[#D5C9B8] px-3.5 py-2 text-xs font-semibold text-[#5A4B3D] hover:bg-white"
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  color: pathname === link.href ? '#0f1e3c' : '#475569',
+                  textDecoration: 'none',
+                }}
               >
-                <LogOut size={14} />
-                <span>Exit Preview to Website</span>
+                <link.icon size={16} />
+                <span>{link.label}</span>
               </Link>
-            </div>
+            ))}
           </div>
         )}
+      </header>
 
-        {/* Page Inner Content */}
-        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
-          {children}
-        </main>
-      </div>
+      {/* ── Page Content ── */}
+      <main style={{ flex: 1, maxWidth: '1240px', width: '100%', margin: '0 auto', padding: '2rem 1.25rem' }}>
+        {children}
+      </main>
     </div>
   );
 }
-

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { DemoProvider } from '@/components/ui/DemoModal';
+import { MockDbProvider } from '@/lib/mock/store';
+import { FeedbackProvider } from '@/lib/mock/feedback';
 
 export const metadata: Metadata = {
   title: {
@@ -39,7 +40,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <DemoProvider>{children}</DemoProvider>
+        <MockDbProvider>
+          <FeedbackProvider>{children}</FeedbackProvider>
+        </MockDbProvider>
       </body>
     </html>
   );

@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Phone, Mail, MapPin } from 'lucide-react';
-import { SITE } from '@/lib/data';
+import { Phone, Mail, MapPin, Lock } from 'lucide-react';
+import { useMockDb } from '@/lib/mock/store';
+import { useFeedback } from '@/lib/mock/feedback';
 
 // Inline SVG social icons (lucide-react doesn't bundle brand icons)
 const IgIcon = () => (
@@ -25,29 +26,37 @@ const LiIcon = () => (
   </svg>
 );
 
-const SOCIAL = [
-  { Icon: IgIcon, href: SITE.instagram, label: 'Instagram' },
-  { Icon: FbIcon, href: SITE.facebook,  label: 'Facebook' },
-  { Icon: LiIcon, href: SITE.linkedin,  label: 'LinkedIn' },
-];
-
 const NAV_LINKS = [
   { label: 'Home',         href: '/' },
   { label: 'Our Projects', href: '/projects' },
   { label: 'About Us',     href: '/#about' },
   { label: 'Services',     href: '/#services' },
   { label: 'Contact Us',   href: '/#contact' },
-  { label: 'Admin Portal (Demo)', href: '/admin/login' },
-];
-
-const CONTACT = [
-  { Icon: Phone,  label: 'Call / WhatsApp', value: SITE.phone,    href: `tel:${SITE.phoneClean}` },
-  { Icon: Mail,   label: "Founder's Desk",  value: SITE.email,    href: `mailto:${SITE.email}` },
-  { Icon: MapPin, label: 'Office',          value: SITE.location, href: SITE.mapUrl },
 ];
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const { state } = useMockDb();
+  const { toast } = useFeedback();
+
+  const SOCIAL = [
+    { Icon: IgIcon, href: state.settings.instagram, label: 'Instagram' },
+    { Icon: FbIcon, href: state.settings.facebook,  label: 'Facebook' },
+    { Icon: LiIcon, href: state.settings.linkedin,  label: 'LinkedIn' },
+  ];
+
+  const CONTACT = [
+    { Icon: Phone,  label: 'Call / WhatsApp', value: state.settings.phone,    href: `tel:${state.settings.phoneClean}` },
+    { Icon: Mail,   label: "Founder's Desk",  value: state.settings.email,    href: `mailto:${state.settings.email}` },
+    { Icon: MapPin, label: 'Office',          value: state.settings.location, href: state.settings.mapUrl },
+  ];
+
+  const handleSocialClick = (e: React.MouseEvent, href: string, label: string) => {
+    if (!href || href === '#') {
+      e.preventDefault();
+      toast(`${label} profile link is inactive in this client demonstration.`, 'info');
+    }
+  };
 
   return (
     <footer className="footer">
@@ -93,7 +102,13 @@ export default function Footer() {
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.75rem' }}>
               {SOCIAL.map(({ Icon, href, label }) => (
-                <a key={label} href={href} aria-label={label} className="footer-social-link">
+                <a
+                  key={label}
+                  href={href}
+                  onClick={(e) => handleSocialClick(e, href, label)}
+                  aria-label={label}
+                  className="footer-social-link"
+                >
                   <Icon />
                 </a>
               ))}
@@ -140,9 +155,26 @@ export default function Footer() {
         </div>
 
         {/* ── Bottom bar ── */}
-        <div className="footer-bottom">
+        <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>© {year} Iconic Design. All rights reserved.</span>
-          <span>Designed for Excellence · Gurgaon, India</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <span>Designed for Excellence · Gurgaon, India</span>
+            <Link
+              href="/admin/login"
+              style={{
+                color: 'rgba(255,255,255,0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                textDecoration: 'none',
+                fontSize: '0.75rem',
+                transition: 'color 0.2s',
+              }}
+              title="Admin Portal"
+            >
+              <Lock size={11} /> Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

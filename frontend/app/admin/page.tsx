@@ -1,211 +1,416 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   FolderKanban,
   Star,
-  Users,
-  Eye,
   Plus,
-  ArrowUpRight,
+  Pencil,
+  Trash2,
+  ExternalLink,
+  Upload,
+  AlertCircle,
   TrendingUp,
-  Clock,
-  Sparkles,
-  Phone,
-  Mail,
-  CheckCircle,
 } from 'lucide-react';
-import { PROJECTS, TESTIMONIALS, INITIAL_LEADS, Lead } from '@/lib/data';
-import { useDemo } from '@/components/ui/DemoModal';
+import { useMockDb, Project } from '@/lib/mock/store';
+import { useFeedback } from '@/lib/mock/feedback';
 
-export default function AdminDashboardPage() {
-  const { showPreview } = useDemo();
-  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
+export default function AdminProjectsDashboard() {
+  const { state, toggleFeatured, deleteProject, upsertProject } = useMockDb();
+  const { toast, confirm } = useFeedback();
 
-  useEffect(() => {
-    // Read session leads if client submitted test inquiries
-    try {
-      const stored = sessionStorage.getItem('demo_leads');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setLeads([...parsed, ...INITIAL_LEADS]);
-        }
-      }
-    } catch {
-      // ignore
+  // Add project form state
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('Residential');
+  const [location, setLocation] = useState('Sector 56, Gurgaon');
+  const [date, setDate] = useState(String(new Date().getFullYear()));
+  const [budget, setBudget] = useState('₹75L');
+  const [area, setArea] = useState('3,500 sq ft');
+  const [desc, setDesc] = useState('');
+  const [coverUrl, setCoverUrl] = useState('/uploads/interior3.jpg');
+
+  const featuredCount = state.projects.filter((p) => p.is_featured).length;
+
+  const handleCreateProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) {
+      toast('Project title is required', 'error');
+      return;
     }
-  }, []);
 
-  const featuredCount = PROJECTS.filter((p) => p.is_featured).length;
+    const created = upsertProject({
+      title,
+      category,
+      location,
+      date,
+      budget,
+      area,
+      desc: desc || `${title} crafted with bespoke finishes and architectural detail.`,
+      cover_image: coverUrl,
+      is_featured: false,
+      status: 'Completed',
+    });
+
+    toast(`Project "${created.title}" created successfully (demo)`, 'success');
+    setTitle('');
+    setDesc('');
+  };
+
+  const handleToggleFeature = (project: Project) => {
+    const res = toggleFeatured(project.id);
+    if (res.success) {
+      toast(res.message || 'Featured status updated', 'success');
+    } else {
+      toast(res.message || 'Cannot feature project', 'error');
+    }
+  };
+
+  const handleDeleteProject = (project: Project) => {
+    confirm({
+      title: `Delete "${project.title}"?`,
+      message: 'Are you sure you want to delete this project? It will be removed from your portfolio showcase.',
+      confirmText: 'Delete Project',
+      onConfirm: () => {
+        deleteProject(project.id);
+        toast(`Project "${project.title}" deleted (demo)`, 'info');
+      },
+    });
+  };
 
   return (
-    <div className="space-y-8">
-      {/* Top Banner / Heading */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* Header bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1
-            className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1F1713]"
-            style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)' }}
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: '1.85rem',
+              fontWeight: 700,
+              color: '#0f1e3c',
+              margin: 0,
+            }}
           >
-            Studio Overview
+            Portfolio & Project Management
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-[#786757]">
-            Live preview of your interior design portfolio management metrics and inquiries.
+          <p style={{ margin: '0.25rem 0 0', fontSize: '0.84rem', color: '#64748b' }}>
+            Manage the project showcase, homepage carousel highlights, and spatial photography.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => showPreview('New Project Creation', 'Opens the modal to upload hero images, input square footage, budget, and project details.')}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1F1713] px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-[#342721] transition cursor-pointer"
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div
+            style={{
+              padding: '0.4rem 0.85rem',
+              borderRadius: '8px',
+              backgroundColor: featuredCount >= 6 ? 'rgba(220, 53, 69, 0.1)' : 'rgba(212, 175, 55, 0.15)',
+              border: `1px solid ${featuredCount >= 6 ? '#fca5a5' : '#d4af37'}`,
+              color: featuredCount >= 6 ? '#dc2626' : '#856404',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
           >
-            <Plus size={15} />
-            <span>Add New Project</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-2xl border border-[#DED4C5] bg-[#FAF7F2] p-5 shadow-xs">
-          <div className="flex items-center justify-between text-[#8A7968]">
-            <span className="text-xs font-bold uppercase tracking-wider">Portfolio Items</span>
-            <div className="h-9 w-9 rounded-xl bg-[#EFE8DD] flex items-center justify-center text-[#1F1713]">
-              <FolderKanban size={18} />
-            </div>
-          </div>
-          <div className="mt-3 text-3xl font-extrabold text-[#1F1713]">{PROJECTS.length}</div>
-          <div className="mt-1 flex items-center gap-1.5 text-xs text-[#2E7D32]">
-            <TrendingUp size={14} />
-            <span>{featuredCount} featured on homepage</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-[#DED4C5] bg-[#FAF7F2] p-5 shadow-xs">
-          <div className="flex items-center justify-between text-[#8A7968]">
-            <span className="text-xs font-bold uppercase tracking-wider">Client Inquiries</span>
-            <div className="h-9 w-9 rounded-xl bg-[#EFE8DD] flex items-center justify-center text-[#1F1713]">
-              <Users size={18} />
-            </div>
-          </div>
-          <div className="mt-3 text-3xl font-extrabold text-[#1F1713]">{leads.length}</div>
-          <div className="mt-1 flex items-center gap-1.5 text-xs text-[#C9A84C]">
-            <Clock size={14} />
-            <span>Active leads awaiting reply</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-[#DED4C5] bg-[#FAF7F2] p-5 shadow-xs">
-          <div className="flex items-center justify-between text-[#8A7968]">
-            <span className="text-xs font-bold uppercase tracking-wider">Reviews & Ratings</span>
-            <div className="h-9 w-9 rounded-xl bg-[#EFE8DD] flex items-center justify-center text-[#1F1713]">
-              <Star size={18} />
-            </div>
-          </div>
-          <div className="mt-3 text-3xl font-extrabold text-[#1F1713]">{TESTIMONIALS.length}</div>
-          <div className="mt-1 flex items-center gap-1.5 text-xs text-[#2E7D32]">
-            <CheckCircle size={14} />
-            <span>100% 5-Star verified reviews</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-[#DED4C5] bg-[#FAF7F2] p-5 shadow-xs">
-          <div className="flex items-center justify-between text-[#8A7968]">
-            <span className="text-xs font-bold uppercase tracking-wider">Site Performance</span>
-            <div className="h-9 w-9 rounded-xl bg-[#EFE8DD] flex items-center justify-center text-[#1F1713]">
-              <Eye size={18} />
-            </div>
-          </div>
-          <div className="mt-3 text-3xl font-extrabold text-[#1F1713]">99.8%</div>
-          <div className="mt-1 flex items-center gap-1.5 text-xs text-[#2E7D32]">
-            <span>Fast CDN static response</span>
+            <Star size={14} className={featuredCount > 0 ? 'fill-current' : ''} />
+            <span>Featured: {featuredCount} / 6 max</span>
           </div>
         </div>
       </div>
 
-      {/* Recent Inquiries Table */}
-      <div className="rounded-2xl border border-[#DED4C5] bg-[#FAF7F2] shadow-xs overflow-hidden">
-        <div className="p-5 sm:p-6 border-b border-[#E7DDCE] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-[#1F1713]">Recent Client Inquiries</h2>
-            <p className="text-xs text-[#786757]">
-              Any enquiry sent through the website contact form updates here in real-time.
-            </p>
-          </div>
-          <Link
-            href="/admin/leads"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8A6A24] hover:text-[#5E4714] transition"
-          >
-            <span>View All Leads ({leads.length})</span>
-            <ArrowUpRight size={14} />
-          </Link>
+      {/* Card 1: Add New Project Form matching original Flask admin.html */}
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+          borderTop: '4px solid #d4af37',
+          borderLeft: '1px solid rgba(0,0,0,0.06)',
+          borderRight: '1px solid rgba(0,0,0,0.06)',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ padding: '1.25rem 1.75rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <Plus size={18} color="#d4af37" />
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: '#0f1e3c', margin: 0 }}>
+            Add New Project
+          </h2>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#EFE9DF] text-[#695847] uppercase font-bold tracking-wider">
+        <form onSubmit={handleCreateProject} style={{ padding: '1.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+            <div>
+              <label style={labelStyle}>Project Title *</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Magnolias Golf Villa"
+                required
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                style={{ ...inputStyle, cursor: 'pointer' }}
+              >
+                <option value="Residential">Residential</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Retail">Retail</option>
+                <option value="Hospitality">Hospitality</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Location</label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="DLF Phase 5, Gurgaon"
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Year</label>
+              <input
+                type="text"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                placeholder="2024"
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Budget (Estimated)</label>
+              <input
+                type="text"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                placeholder="₹85L"
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Area (Sq Ft)</label>
+              <input
+                type="text"
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                placeholder="4,200 sq ft"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.25rem' }}>
+            <label style={labelStyle}>Cover Image (Choose or enter path)</label>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <input
+                type="text"
+                value={coverUrl}
+                onChange={(e) => setCoverUrl(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <select
+                onChange={(e) => setCoverUrl(e.target.value)}
+                value={coverUrl}
+                style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}
+              >
+                <option value="/uploads/interior0.jpg">Interior Sample 0</option>
+                <option value="/uploads/interior1.jpg">Interior Sample 1</option>
+                <option value="/uploads/interior2.jpg">Interior Sample 2</option>
+                <option value="/uploads/interior3.jpg">Interior Sample 3</option>
+                <option value="/uploads/interior4.jpg">Interior Sample 4</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.25rem' }}>
+            <label style={labelStyle}>Short Description (For Project Detail & Cards)</label>
+            <textarea
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              placeholder="Full architectural description, bespoke finishes, and custom styling narrative..."
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical' }}
+            />
+          </div>
+
+          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="submit"
+              style={{
+                padding: '0.8rem 2rem',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #0f1e3c 0%, #1e40af 100%)',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 12px rgba(15, 30, 60, 0.2)',
+              }}
+            >
+              <Plus size={16} /> Create Project
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Card 2: Existing Projects Table matching original Flask admin.html */}
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+          border: '1px solid rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            padding: '1.25rem 1.75rem',
+            borderBottom: '1px solid #f1f5f9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <FolderKanban size={18} color="#d4af37" />
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: '#0f1e3c', margin: 0 }}>
+              Existing Portfolio Projects ({state.projects.length})
+            </h2>
+          </div>
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+            <thead style={{ backgroundColor: 'rgba(235, 222, 202, 0.4)', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>
               <tr>
-                <th className="py-3 px-5">Client</th>
-                <th className="py-3 px-5">Contact</th>
-                <th className="py-3 px-5">Service / Scope</th>
-                <th className="py-3 px-5">Budget</th>
-                <th className="py-3 px-5">Status</th>
-                <th className="py-3 px-5 text-right">Actions</th>
+                <th style={{ padding: '0.85rem 1.25rem', fontWeight: 700 }}>Project</th>
+                <th style={{ padding: '0.85rem 1.25rem', fontWeight: 700 }}>Category & Location</th>
+                <th style={{ padding: '0.85rem 1.25rem', fontWeight: 700 }}>Budget</th>
+                <th style={{ padding: '0.85rem 1.25rem', fontWeight: 700 }}>Featured on Home</th>
+                <th style={{ padding: '0.85rem 1.25rem', fontWeight: 700, textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EAE1D3]">
-              {leads.slice(0, 5).map((lead) => (
-                <tr key={lead.id} className="hover:bg-[#F3EDE3] transition">
-                  <td className="py-3.5 px-5">
-                    <div className="font-bold text-[#1F1713] text-sm">{lead.name}</div>
-                    <div className="text-[11px] text-[#8C7B6B]">{lead.created_at}</div>
-                  </td>
-                  <td className="py-3.5 px-5 space-y-1">
-                    <div className="flex items-center gap-1.5 text-[#4E3F31]">
-                      <Phone size={12} className="text-[#C9A84C]" />
-                      <span>{lead.phone}</span>
-                    </div>
-                    {lead.email && (
-                      <div className="flex items-center gap-1.5 text-[#736353]">
-                        <Mail size={12} className="text-[#8C7B6B]" />
-                        <span>{lead.email}</span>
+            <tbody>
+              {state.projects.map((project) => (
+                <tr
+                  key={project.id}
+                  style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fafafa')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <td style={{ padding: '1rem 1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={project.cover_image}
+                        alt={project.title}
+                        style={{
+                          height: '46px',
+                          width: '64px',
+                          borderRadius: '6px',
+                          objectFit: 'cover',
+                          border: '1px solid #e2e8f0',
+                        }}
+                      />
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#0f1e3c', fontSize: '0.9rem' }}>{project.title}</div>
+                        <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>ID: #{project.id} • {project.date}</div>
                       </div>
-                    )}
+                    </div>
                   </td>
-                  <td className="py-3.5 px-5 text-[#4E3F31] font-medium">
-                    {lead.service || 'Interior Consultation'}
-                  </td>
-                  <td className="py-3.5 px-5">
-                    <span className="font-semibold text-[#1F1713]">{lead.budget || 'Flexible'}</span>
-                  </td>
-                  <td className="py-3.5 px-5">
+
+                  <td style={{ padding: '1rem 1.25rem' }}>
                     <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        lead.status === 'new'
-                          ? 'bg-[#C9A84C]/20 text-[#8C6B1C]'
-                          : lead.status === 'contacted'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}
+                      style={{
+                        display: 'inline-block',
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: '4px',
+                        backgroundColor: '#f1f5f9',
+                        color: '#475569',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        marginBottom: '0.25rem',
+                      }}
                     >
-                      {lead.status}
+                      {project.category}
                     </span>
+                    <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{project.location}</div>
                   </td>
-                  <td className="py-3.5 px-5 text-right space-x-2">
+
+                  <td style={{ padding: '1rem 1.25rem' }}>
+                    <div style={{ fontWeight: 700, color: '#0f1e3c' }}>{project.budget}</div>
+                    <div style={{ fontSize: '0.74rem', color: '#16a34a' }}>{project.status}</div>
+                  </td>
+
+                  <td style={{ padding: '1rem 1.25rem' }}>
                     <button
-                      onClick={() => showPreview(`Follow-up with ${lead.name}`, `In production, this triggers an instant WhatsApp chat or dialer directly to ${lead.phone}.`)}
-                      className="px-2.5 py-1 rounded-lg border border-[#D5C9B8] bg-white font-semibold text-[#524436] hover:bg-[#FAF7F2] transition"
+                      onClick={() => handleToggleFeature(project)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '9999px',
+                        border: project.is_featured ? '1px solid #d4af37' : '1px solid #cbd5e1',
+                        backgroundColor: project.is_featured ? 'rgba(212, 175, 55, 0.15)' : '#f8fafc',
+                        color: project.is_featured ? '#856404' : '#64748b',
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        transition: 'all 0.2s',
+                      }}
                     >
-                      Follow Up
+                      <Star size={13} className={project.is_featured ? 'fill-current' : ''} />
+                      <span>{project.is_featured ? 'Featured' : 'Standard'}</span>
                     </button>
-                    <button
-                      onClick={() => showPreview(`Delete lead #${lead.id}`, 'Deletes this inquiry record from the database.')}
-                      className="px-2.5 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition"
-                    >
-                      Delete
-                    </button>
+                  </td>
+
+                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        target="_blank"
+                        title="View live page"
+                        style={actionBtnStyle}
+                      >
+                        <ExternalLink size={13} />
+                      </Link>
+
+                      <Link
+                        href={`/admin/projects/${project.id}/edit`}
+                        title="Edit project details"
+                        style={{ ...actionBtnStyle, color: '#1e40af' }}
+                      >
+                        <Pencil size={13} />
+                      </Link>
+
+                      <button
+                        onClick={() => handleDeleteProject(project)}
+                        title="Delete project"
+                        style={{ ...actionBtnStyle, color: '#dc2626' }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -213,38 +418,38 @@ export default function AdminDashboardPage() {
           </table>
         </div>
       </div>
-
-      {/* Quick Showcase Actions */}
-      <div className="rounded-2xl border border-[#C9A84C]/30 bg-gradient-to-r from-[#FAF7F2] to-[#F5ECE0] p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#937123]">
-            <Sparkles size={15} />
-            <span>Client Demonstration Sandbox</span>
-          </div>
-          <h3 className="mt-1 text-base font-bold text-[#1F1713]">
-            Test drive every admin feature without fear
-          </h3>
-          <p className="mt-0.5 text-xs text-[#736353]">
-            All toggle switches, project editors, and deletion dialogs demonstrate their exact workflow with zero risk of database corruption.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Link
-            href="/admin/projects"
-            className="rounded-xl border border-[#C9A84C] bg-white px-4 py-2 text-xs font-bold text-[#8C6D27] shadow-xs hover:bg-[#FAF7F2] transition"
-          >
-            Manage Projects
-          </Link>
-          <Link
-            href="/admin/settings"
-            className="rounded-xl bg-[#1F1713] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#342721] transition"
-          >
-            Site Settings
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }
 
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '0.8rem',
+  fontWeight: 700,
+  color: '#334155',
+  marginBottom: '0.35rem',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.65rem 0.85rem',
+  borderRadius: '6px',
+  border: '1.5px solid #cbd5e1',
+  fontSize: '0.88rem',
+  fontFamily: "'Poppins', sans-serif",
+  outline: 'none',
+  backgroundColor: '#ffffff',
+};
+
+const actionBtnStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0.4rem 0.65rem',
+  borderRadius: '6px',
+  border: '1px solid #cbd5e1',
+  backgroundColor: '#ffffff',
+  color: '#475569',
+  cursor: 'pointer',
+  textDecoration: 'none',
+};
