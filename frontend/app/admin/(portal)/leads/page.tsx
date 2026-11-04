@@ -136,7 +136,7 @@ export default function AdminLeadsPage() {
           gap: '1rem',
         }}
       >
-        <div style={{ position: 'relative', width: '280px' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '320px' }}>
           <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
           <input
             type="text"
@@ -154,7 +154,7 @@ export default function AdminLeadsPage() {
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           {['All', 'New', 'Contacted', 'Scheduled'].map((status) => (
             <button
               key={status}
@@ -191,7 +191,7 @@ export default function AdminLeadsPage() {
         }}
       >
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+          <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
             <thead style={{ backgroundColor: 'rgba(235, 222, 202, 0.4)', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>
               <tr>
                 <th style={{ padding: '0.85rem 1.25rem', fontWeight: 700 }}>Client &amp; Date</th>

@@ -141,7 +141,7 @@ export default function AdminProjectsDashboard() {
         </div>
 
         <form onSubmit={handleCreateProject} style={{ padding: '1.75rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '1.25rem' }}>
             <div>
               <label style={labelStyle}>Project Title *</label>
               <input
@@ -299,7 +299,7 @@ export default function AdminProjectsDashboard() {
         </div>
 
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+          <table style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
             <thead style={{ backgroundColor: 'rgba(235, 222, 202, 0.4)', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>
               <tr>
                 <th style={{ padding: '0.85rem 1.25rem', fontWeight: 700 }}>Project</th>

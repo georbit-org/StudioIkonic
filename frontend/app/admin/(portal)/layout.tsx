@@ -144,7 +144,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <nav className="admin-desktop-nav" style={{ alignItems: 'center', gap: '1.5rem' }}>
             {ADMIN_LINKS.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -172,15 +172,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
 
           {/* Right utility buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button
               onClick={handleResetData}
               title="Reset state to initial seed data"
+              className="admin-utility-btn"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                padding: '0.45rem 0.8rem',
+                padding: '0.45rem 0.75rem',
                 borderRadius: '6px',
                 backgroundColor: '#ffffff',
                 border: '1px solid #cbd5e1',
@@ -191,18 +192,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               }}
             >
               <RotateCcw size={13} />
-              <span className="hidden sm:inline">Reset Demo</span>
+              <span className="hidden sm:inline">Reset</span>
             </button>
 
             <Link
               href="/"
               target="_blank"
               title="Open public website in new tab"
+              className="admin-utility-btn"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.35rem',
-                padding: '0.45rem 0.8rem',
+                padding: '0.45rem 0.75rem',
                 borderRadius: '6px',
                 backgroundColor: '#ffffff',
                 border: '1px solid #cbd5e1',
@@ -222,7 +224,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.35rem',
-                padding: '0.45rem 0.8rem',
+                padding: '0.45rem 0.75rem',
                 borderRadius: '6px',
                 backgroundColor: 'rgba(220, 53, 69, 0.1)',
                 border: '1px solid rgba(220, 53, 69, 0.25)',
@@ -233,22 +235,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               }}
             >
               <LogOut size={13} />
-              <span>Logout</span>
+              <span className="hidden xs:inline">Logout</span>
             </button>
 
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden"
+              className="admin-mobile-menu-btn"
+              aria-label="Toggle navigation menu"
               style={{
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
                 color: '#0f1e3c',
                 padding: '4px',
+                display: 'none',
               }}
             >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
@@ -257,12 +261,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {mobileMenuOpen && (
           <div
             style={{
-              padding: '1rem',
+              padding: '1rem 1.25rem 1.5rem',
               backgroundColor: 'rgba(235, 222, 202, 0.98)',
               borderTop: '1px solid rgba(0,0,0,0.06)',
               display: 'flex',
               flexDirection: 'column',
               gap: '0.6rem',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
             }}
           >
             {ADMIN_LINKS.map((link) => (
@@ -273,15 +278,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.5rem',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
+                  gap: '0.6rem',
+                  padding: '0.65rem 0.75rem',
+                  borderRadius: '6px',
+                  backgroundColor: pathname === link.href ? 'rgba(15, 30, 60, 0.08)' : 'transparent',
+                  fontSize: '0.92rem',
+                  fontWeight: pathname === link.href ? 700 : 600,
                   color: pathname === link.href ? '#0f1e3c' : '#475569',
                   textDecoration: 'none',
                 }}
               >
-                <link.icon size={16} />
+                <link.icon size={17} color={pathname === link.href ? '#d4af37' : '#64748b'} />
                 <span>{link.label}</span>
               </Link>
             ))}
@@ -290,9 +297,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </header>
 
       {/* ── Page Content ── */}
-      <main style={{ flex: 1, maxWidth: '1240px', width: '100%', margin: '0 auto', padding: '2rem 1.25rem' }}>
+      <main style={{ flex: 1, maxWidth: '1240px', width: '100%', margin: '0 auto', padding: 'clamp(1rem, 3vw, 2rem) clamp(1rem, 2.5vw, 1.5rem)' }}>
         {children}
       </main>
+
+      <style>{`
+        .admin-desktop-nav {
+          display: flex;
+        }
+        @media (max-width: 860px) {
+          .admin-desktop-nav {
+            display: none !important;
+          }
+          .admin-mobile-menu-btn {
+            display: flex !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

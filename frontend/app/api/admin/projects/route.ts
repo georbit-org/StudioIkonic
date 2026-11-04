@@ -99,3 +99,4 @@ export async function POST(req: NextRequest) {
 
   return jsonOk(newProject, 'Project successfully added!', { status: 201 });
 }
+

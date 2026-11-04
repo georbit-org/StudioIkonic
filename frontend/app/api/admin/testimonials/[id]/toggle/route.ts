@@ -29,3 +29,4 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     `Review by "${item.name}" is now ${item.published ? 'published' : 'hidden'}.`
   );
 }
+

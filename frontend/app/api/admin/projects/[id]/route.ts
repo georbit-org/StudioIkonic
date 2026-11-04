@@ -73,3 +73,4 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
   return jsonOk({ id: projectId }, 'Project deleted successfully.');
 }
+

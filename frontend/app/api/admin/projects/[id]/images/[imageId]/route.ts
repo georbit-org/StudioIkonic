@@ -27,3 +27,4 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
   return jsonOk({ imageId: imgId }, 'Gallery image deleted successfully.');
 }
+

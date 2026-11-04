@@ -737,7 +737,7 @@ export default function ProjectsSection() {
             scroll-snap-align: start;
           }
           .accordion-pane.is-active {
-            width: 280px !important;
+            width: min(280px, calc(100vw - 3rem)) !important;
           }
         }
       `}</style>

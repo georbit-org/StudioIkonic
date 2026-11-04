@@ -153,7 +153,7 @@ export default function HeroSection() {
           paddingLeft: 'clamp(1.5rem, 4vw, 3.5rem)',
           paddingRight: 'clamp(1.5rem, 4vw, 3.5rem)',
           paddingTop: '6rem',
-          paddingBottom: '3rem',
+          paddingBottom: 'clamp(4.5rem, 8vw, 3rem)',
         }}
       >
         <motion.div
@@ -344,7 +344,7 @@ export default function HeroSection() {
         style={{
           position: 'absolute',
           bottom: '2rem',
-          right: 'clamp(1.5rem, 4vw, 3.5rem)',
+          right: 'clamp(1rem, 3.5vw, 3.5rem)',
           zIndex: 15,
           display: 'flex',
           flexDirection: 'column',
@@ -458,7 +458,10 @@ export default function HeroSection() {
         @media (max-width: 640px) {
           .hero-stats-grid {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 1rem !important;
+            gap: 1.25rem 0.75rem !important;
+          }
+          .hero-clear-content {
+            max-width: 100% !important;
           }
         }
       `}</style>

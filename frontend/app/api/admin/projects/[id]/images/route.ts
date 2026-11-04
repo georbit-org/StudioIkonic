@@ -54,3 +54,4 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
   return jsonOk(newImage, 'Image added to gallery (dummy upload preview)', { status: 201 });
 }
+

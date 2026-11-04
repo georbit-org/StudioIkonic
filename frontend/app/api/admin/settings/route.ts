@@ -34,3 +34,4 @@ export async function PUT(req: NextRequest) {
     return jsonFail('Failed to parse settings update', 400);
   }
 }
+

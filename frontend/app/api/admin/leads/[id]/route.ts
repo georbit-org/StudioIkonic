@@ -26,3 +26,4 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
   return jsonOk({ id: leadId }, 'Inquiry successfully deleted.');
 }
+

@@ -154,7 +154,7 @@ export default function EditProjectClient({ id }: { id: string }) {
         </div>
 
         <form onSubmit={handleSave} style={{ padding: '2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: '1.5rem' }}>
             <div>
               <label style={labelStyle}>Project Title</label>
               <input

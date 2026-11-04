@@ -8,3 +8,4 @@ export async function POST(req: NextRequest) {
   // As requested: all credentials intentionally throw Wrong credentials
   return jsonFail('Wrong credentials. Please try again.', 401, 'INVALID_CREDENTIALS');
 }
+

@@ -91,3 +91,4 @@ export interface SandboxStore {
   leads: Lead[];
   settings: SiteSettings;
 }
+

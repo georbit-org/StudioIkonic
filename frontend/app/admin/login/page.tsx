@@ -61,19 +61,19 @@ export default function AdminLoginPage() {
       }}
     >
       {/* Back link */}
-      <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', zIndex: 10 }}>
+      <div className="login-back-btn-wrap">
         <Link
           href="/"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.4rem',
-            padding: '0.5rem 1rem',
+            padding: '0.45rem 0.9rem',
             borderRadius: '8px',
             backgroundColor: 'rgba(235, 222, 202, 0.8)',
             border: '1px solid rgba(0,0,0,0.08)',
             color: '#0f1e3c',
-            fontSize: '0.82rem',
+            fontSize: '0.8rem',
             fontWeight: 600,
             textDecoration: 'none',
             transition: 'all 0.2s',
@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
             </h3>
           </div>
 
-          <div style={{ padding: '2rem' }}>
+          <div className="login-card-body" style={{ padding: '2rem' }}>
             {errorMessage && (
               <div
                 style={{
@@ -278,6 +278,26 @@ export default function AdminLoginPage() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .login-back-btn-wrap {
+          position: absolute;
+          top: 1.5rem;
+          left: 1.5rem;
+          z-index: 10;
+        }
+        @media (max-width: 540px) {
+          .login-back-btn-wrap {
+            position: static;
+            margin: 0 auto 1.5rem;
+            max-width: 480px;
+            width: 100%;
+          }
+          .login-card-body {
+            padding: 1.5rem 1.25rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

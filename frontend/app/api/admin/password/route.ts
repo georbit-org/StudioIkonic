@@ -23,3 +23,4 @@ export async function POST(req: NextRequest) {
     return jsonFail('Invalid request body', 400);
   }
 }
+

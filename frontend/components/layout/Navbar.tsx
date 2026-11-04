@@ -239,7 +239,7 @@ export default function Navbar() {
       </header>
 
       {/* ── Mobile fullscreen drawer ── */}
-      <div className={`mobile-nav ${mobileOpen ? 'open' : ''}`}>
+      <div className={`mobile-nav ${mobileOpen ? 'open' : ''}`} style={{ overflowY: 'auto', padding: '5rem 1.5rem 3rem' }}>
         <button
           onClick={() => setMobileOpen(false)}
           aria-label="Close menu"
@@ -325,9 +325,15 @@ export default function Navbar() {
           border-color: var(--gold) !important;
           transform: scale(1.05);
         }
-        @media (max-width: 768px) {
+        @media (max-width: 960px) {
           .nav-desktop { display: none !important; }
           .menu-btn { display: flex !important; }
+        }
+        @media (max-width: 480px) {
+          .nav-call-btn, .nav-admin-btn {
+            width: 36px !important;
+            height: 36px !important;
+          }
         }
       `}</style>
     </>

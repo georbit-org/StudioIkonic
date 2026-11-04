@@ -113,7 +113,7 @@ export default function AdminSettingsPage() {
         </div>
 
         <form onSubmit={handleSaveSettings} style={{ padding: '1.75rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: '1.25rem' }}>
             <div>
               <label style={labelStyle}>Brand Name</label>
               <input
@@ -206,7 +206,7 @@ export default function AdminSettingsPage() {
         </div>
 
         <form onSubmit={handleChangePassword} style={{ padding: '1.75rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '1.25rem' }}>
             <div>
               <label style={labelStyle}>Current Password</label>
               <input

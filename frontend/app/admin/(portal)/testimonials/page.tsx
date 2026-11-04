@@ -105,7 +105,7 @@ export default function AdminTestimonialsPage() {
         </div>
 
         <form onSubmit={handleCreate} style={{ padding: '1.75rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '1.25rem' }}>
             <div>
               <label style={labelStyle}>Client Name *</label>
               <input
@@ -199,6 +199,7 @@ export default function AdminTestimonialsPage() {
           {state.testimonials.map((item, idx) => (
             <div
               key={item.id}
+              className="testimonial-admin-row"
               style={{
                 padding: '1.5rem 1.75rem',
                 borderBottom: '1px solid #f1f5f9',
@@ -243,7 +244,7 @@ export default function AdminTestimonialsPage() {
               </div>
 
               {/* Right action controls */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+              <div className="testimonial-admin-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
                 {/* Reorder Buttons */}
                 <button
                   type="button"
@@ -297,6 +298,24 @@ export default function AdminTestimonialsPage() {
           ))}
         </div>
       </div>
+
+      <style>{`
+        .testimonial-admin-row {
+          flex-direction: row;
+        }
+        @media (max-width: 640px) {
+          .testimonial-admin-row {
+            flex-direction: column !important;
+            gap: 1rem !important;
+          }
+          .testimonial-admin-actions {
+            width: 100% !important;
+            justify-content: flex-end !important;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 0.75rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }

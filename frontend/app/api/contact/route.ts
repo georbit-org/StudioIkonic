@@ -67,3 +67,4 @@ export async function POST(req: NextRequest) {
     return jsonFail('Failed to process enquiry. Please try again.', 500, 'SERVER_ERROR');
   }
 }
+

@@ -83,7 +83,7 @@ export default function EditTestimonialClient({ id }: { id: string }) {
         </div>
 
         <form onSubmit={handleSave} style={{ padding: '2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '1.25rem' }}>
             <div>
               <label style={labelStyle}>Client Name</label>
               <input

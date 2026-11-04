@@ -37,3 +37,4 @@ export function jsonFail(message: string, status = 400, code = 'BAD_REQUEST'): N
     { status }
   );
 }
+

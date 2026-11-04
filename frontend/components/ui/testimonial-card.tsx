@@ -32,7 +32,7 @@ export function TestimonialCard({
         "bg-white border border-[rgba(201,168,76,0.22)] shadow-[0_4px_20px_rgba(15,30,60,0.06)]",
         "p-5 sm:p-6 text-start",
         "hover:border-[#c9a84c] hover:shadow-[0_10px_30px_rgba(15,30,60,0.12)]",
-        "w-[320px] sm:w-[380px] shrink-0 select-none",
+        "w-[280px] sm:w-[380px] shrink-0 select-none",
         "transition-all duration-300",
         className
       )}
