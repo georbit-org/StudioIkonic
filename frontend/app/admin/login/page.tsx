@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Lock, ArrowRight, Sparkles, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useFeedback } from '@/lib/mock/feedback';
+import { api } from '@/lib/client/api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -13,23 +14,36 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage('');
 
-    setTimeout(() => {
-      setLoading(false);
-      const msg = 'Wrong credentials. Please try again.';
+    try {
+      await api.post('/api/admin/login', { password });
+      // Never reached because backend always returns 401 INVALID_CREDENTIALS
+      sessionStorage.setItem('demo_admin_session', '1');
+      router.push('/admin');
+    } catch (err: any) {
+      const msg = err.message || 'Wrong credentials. Please try again.';
       setErrorMessage(msg);
       toast(msg, 'error', 'Authentication Failed');
-    }, 700);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePreviewAsAdmin = () => {
-    sessionStorage.setItem('demo_admin_session', '1');
-    toast('Logged in as Administrator (Demo Preview)', 'success');
-    router.push('/admin');
+  const handlePreviewAsAdmin = async () => {
+    try {
+      await api.post('/api/admin/preview');
+      sessionStorage.setItem('demo_admin_session', '1');
+      toast('Logged in as Administrator (Demo Preview)', 'success');
+      router.push('/admin');
+    } catch (err) {
+      // Fallback
+      sessionStorage.setItem('demo_admin_session', '1');
+      router.push('/admin');
+    }
   };
 
   return (
@@ -219,7 +233,7 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Preview As Admin Button (Pattern from school-dummy) */}
+            {/* Preview As Admin Button */}
             <button
               onClick={handlePreviewAsAdmin}
               type="button"

@@ -1,11 +1,11 @@
 services:
   - type: web
     name: studio-ikonic-demo
-    runtime: static
+    runtime: node
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: out
-    headers:
-      - path: /_next/static/*
-        name: Cache-Control
-        value: public, max-age=31536000, immutable
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production

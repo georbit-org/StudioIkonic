@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useMockDb } from '@/lib/mock/store';
 import { useFeedback } from '@/lib/mock/feedback';
+import { api } from '@/lib/client/api';
 
 const ADMIN_LINKS = [
   { label: 'Dashboard & Projects', href: '/admin', icon: LayoutDashboard },
@@ -48,7 +49,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [pathname, router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.post('/api/admin/logout');
+    } catch {
+      // ignore
+    }
     sessionStorage.removeItem('demo_admin_session');
     toast('Logged out of Admin Portal', 'info');
     router.push('/admin/login');
@@ -59,9 +65,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: 'Reset Demo Data to Initial Seed?',
       message: 'This will restore all projects, reviews, inquiries, and settings back to default factory state.',
       confirmText: 'Reset State',
-      onConfirm: () => {
+      onConfirm: async () => {
+        try {
+          await api.post('/api/admin/reset');
+        } catch {
+          // ignore
+        }
         resetDb();
         toast('Demo database reset to factory state', 'success');
+        window.location.reload();
       },
     });
   };

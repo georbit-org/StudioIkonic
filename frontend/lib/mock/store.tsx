@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { PROJECTS as INITIAL_PROJECTS, TESTIMONIALS as INITIAL_TESTIMONIALS, SITE as INITIAL_SITE, INITIAL_LEADS, Lead } from '@/lib/data';
+import { api } from '@/lib/client/api';
 
 export type { Lead };
 
@@ -126,6 +127,9 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
       p.id === id ? { ...p, is_featured: !p.is_featured } : p
     );
     saveState({ ...state, projects: updatedProjects });
+
+    api.post(`/api/admin/projects/${id}/feature`).catch(() => {});
+
     return {
       success: true,
       message: !project.is_featured ? `"${project.title}" is now featured on homepage.` : `"${project.title}" unfeatured.`,
@@ -135,6 +139,7 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
   const deleteProject = useCallback((id: number) => {
     const updated = state.projects.filter((p) => p.id !== id);
     saveState({ ...state, projects: updated });
+    api.delete(`/api/admin/projects/${id}`).catch(() => {});
   }, [state, saveState]);
 
   const upsertProject = useCallback((data: Partial<Project> & { id?: number }) => {
@@ -146,6 +151,7 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
       } as Project;
       const updated = state.projects.map((p) => (p.id === data.id ? saved : p));
       saveState({ ...state, projects: updated });
+      api.put(`/api/admin/projects/${data.id}`, saved).catch(() => {});
     } else {
       const newId = Math.max(...state.projects.map((p) => p.id), 0) + 1;
       saved = {
@@ -164,6 +170,7 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
         highlights: data.highlights || ['Luxury Finishes', 'Custom Millwork'],
       };
       saveState({ ...state, projects: [saved, ...state.projects] });
+      api.post('/api/admin/projects', saved).catch(() => {});
     }
     return saved;
   }, [state, saveState]);
@@ -173,11 +180,13 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
       t.id === id ? { ...t, published: !(t.published !== false) } : t
     );
     saveState({ ...state, testimonials: updated });
+    api.post(`/api/admin/testimonials/${id}/toggle`).catch(() => {});
   }, [state, saveState]);
 
   const deleteTestimonial = useCallback((id: number) => {
     const updated = state.testimonials.filter((t) => t.id !== id);
     saveState({ ...state, testimonials: updated });
+    api.delete(`/api/admin/testimonials/${id}`).catch(() => {});
   }, [state, saveState]);
 
   const reorderTestimonial = useCallback((id: number, direction: 'up' | 'down') => {
@@ -192,6 +201,7 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
     list[index] = list[targetIdx];
     list[targetIdx] = temp;
     saveState({ ...state, testimonials: list });
+    api.post('/api/admin/testimonials/reorder', { id, direction }).catch(() => {});
   }, [state, saveState]);
 
   const upsertTestimonial = useCallback((data: Partial<Testimonial> & { id?: number }) => {
@@ -203,6 +213,7 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
       } as Testimonial;
       const updated = state.testimonials.map((t) => (t.id === data.id ? saved : t));
       saveState({ ...state, testimonials: updated });
+      api.put(`/api/admin/testimonials/${data.id}`, saved).catch(() => {});
     } else {
       const newId = Math.max(...state.testimonials.map((t) => t.id), 0) + 1;
       const initials = (data.name || 'Client')
@@ -221,6 +232,7 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
         published: true,
       };
       saveState({ ...state, testimonials: [saved, ...state.testimonials] });
+      api.post('/api/admin/testimonials', saved).catch(() => {});
     }
     return saved;
   }, [state, saveState]);
@@ -233,12 +245,14 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
       status: 'new',
     };
     saveState({ ...state, leads: [newLead, ...state.leads] });
+    api.post('/api/contact', leadData).catch(() => {});
     return newLead;
   }, [state, saveState]);
 
   const deleteLead = useCallback((id: string | number) => {
     const updated = state.leads.filter((l) => String(l.id) !== String(id));
     saveState({ ...state, leads: updated });
+    api.delete(`/api/admin/leads/${id}`).catch(() => {});
   }, [state, saveState]);
 
   const updateSettings = useCallback((newSettings: Partial<SiteSettings>) => {
@@ -246,11 +260,13 @@ export function MockDbProvider({ children }: { children: React.ReactNode }) {
       ...state,
       settings: { ...state.settings, ...newSettings },
     });
+    api.put('/api/admin/settings', newSettings).catch(() => {});
   }, [state, saveState]);
 
   const resetDb = useCallback(() => {
     const fresh = getInitialState();
     saveState(fresh);
+    api.post('/api/admin/reset').catch(() => {});
   }, [saveState]);
 
   const exportLeadsCsv = useCallback(() => {
